@@ -127,6 +127,11 @@ export function evaluate(item: FoodItem, p: Profile): Evaluation {
       const tr = hits.filter(h => h.trace && h.tag === tag);
       if (tr.length && !byTag[tag]) add('caution', `May contain ${A.label.toLowerCase()}, made on shared equipment.`, `Allergy: ${A.label}`, tr.map(h => h.word), 'trace:' + tag);
     }
+    if (!A.tags.some(t => byTag[t])) {
+      for (const tag of A.possible || []) {
+        if (byTag[tag]) add('caution', `Lists ${joinWords(byTag[tag].map(w => `“${w}”`))}, which can include ${A.label.toLowerCase()}. The label doesn't say.`, `Allergy: ${A.label} · possible hidden source`, byTag[tag], `possible:${k}:${tag}`);
+      }
+    }
   }
 
   for (const k of p.sens) {

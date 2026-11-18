@@ -26,6 +26,9 @@ export const DICT: [string, RegExp][] = [
   ['soy', /\b(soy|soya|soybeans?|tofu|edamame)\b/],
   ['wheat', /\b(wheat|barley|rye|spelt|gluten|semolina|durum|malt)\b/],
   ['sesame', /\b(sesame|tahini)\b/],
+  ['onion', /\b(onion powder|dehydrated onions?|onions?|scallions?|shallots?|leeks?|chives)\b/],
+  ['garlic', /\b(garlic powder|garlic salt|garlic)\b/],
+  ['spices', /\b(spices|spice blend|spice extractives?|seasonings?)\b/],
   ['art_sweetener', /\b(aspartame|sucralose|acesulfame potassium|acesulfame k|acesulfame|saccharin|neotame|advantame)\b/],
   ['art_color', /\b(red 40|red 3|yellow 5|yellow 6|blue 1|blue 2|green 3|fd&c [a-z]+ (no\. )?\d+|tartrazine|allura red)\b/],
   ['preservative', /\b(tbhq|bha|bht|sodium nitrite|sodium nitrate|potassium bromate|sodium benzoate|potassium benzoate)\b/],
@@ -77,11 +80,14 @@ export const AVOIDABLES: Record<string, { label: string; tags: string[]; possibl
   gelatin: { label: 'Gelatin', tags: ['gelatin'], syn: 'Also catches gelatine and collagen.' },
 };
 
-export const ALLERGENS: Record<string, { label: string; tags: string[] }> = {
+/** `possible` tags are vague label words (like "spices") that can hide the allergen; they give a Caution. */
+export const ALLERGENS: Record<string, { label: string; tags: string[]; possible?: string[] }> = {
   peanut: { label: 'Peanuts', tags: ['peanut'] }, tree_nut: { label: 'Tree nuts', tags: ['tree_nut'] },
   milk: { label: 'Milk', tags: ['dairy'] }, egg: { label: 'Eggs', tags: ['egg'] }, soy: { label: 'Soy', tags: ['soy'] },
   wheat: { label: 'Wheat', tags: ['wheat'] }, sesame: { label: 'Sesame', tags: ['sesame'] },
   fish: { label: 'Fish', tags: ['fish'] }, shellfish: { label: 'Shellfish', tags: ['shellfish'] },
+  onion: { label: 'Onion', tags: ['onion'], possible: ['spices', 'natural_flavors'] },
+  garlic: { label: 'Garlic', tags: ['garlic'], possible: ['spices', 'natural_flavors'] },
 };
 
 export const SENSITIVITIES: Record<string, { label: string; tags: string[]; txt: (w: string) => string }> = {

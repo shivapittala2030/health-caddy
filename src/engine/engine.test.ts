@@ -55,6 +55,17 @@ describe('verdicts', () => {
     expect(evaluate(item('Water', { source: 'label' }), base).verdict).toBe('unknown');
   });
 
+  it('treats onion and garlic as allergies, including hidden sources', () => {
+    const onion = { ...base, allergies: ['onion'] };
+    expect(evaluate(item('Tomatoes, green onions, salt.'), onion).verdict).toBe('avoid');
+    expect(evaluate(item('Rice, garlic powder, salt.'), { ...base, allergies: ['garlic'] }).verdict).toBe('avoid');
+    const vague = evaluate(item('Rice, salt, spices.'), onion);
+    expect(vague.verdict).toBe('caution');
+    expect(vague.reasons.some(r => /can include onion/.test(r.text))).toBe(true);
+    expect(evaluate(item('Rice, salt, spices.'), base).verdict).toBe('good');
+    expect(evaluate(item('Rice, salt. May contain garlic.'), { ...base, allergies: ['garlic'] }).verdict).toBe('caution');
+  });
+
   it('applies the custom avoid list and Jain root vegetables', () => {
     expect(evaluate(item('Rice, mushrooms, salt.'), { ...base, custom: ['mushrooms'] }).verdict).toBe('avoid');
     expect(evaluate(item('Potatoes, sunflower oil, sea salt.'), { ...base, diet: 'jain' }).verdict).toBe('avoid');

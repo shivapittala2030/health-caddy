@@ -25,3 +25,8 @@ create policy "update own data" on public.user_data
 drop policy if exists "delete own data" on public.user_data;
 create policy "delete own data" on public.user_data
   for delete to authenticated using ((select auth.uid()) = user_id);
+
+-- Newer Supabase projects don't give table access to signed-in users automatically.
+-- Signed-in users get access (still limited to their own row by the policies above); anonymous visitors get none.
+grant select, insert, update, delete on public.user_data to authenticated;
+revoke all on public.user_data from anon;

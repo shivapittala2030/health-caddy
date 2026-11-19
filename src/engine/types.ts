@@ -95,6 +95,7 @@ export interface Person {
   name: string;
   profile: Profile;
   createdAt: number;
+  updatedAt?: number; // last edit, so the newest wins when two devices sync
 }
 
 /** A record that a person checked a food, kept for their usage report. */

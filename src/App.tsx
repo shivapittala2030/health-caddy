@@ -9,6 +9,9 @@ import { ResultView } from './ui/Result';
 import { AddSheet, LogScreen, dayLabel } from './ui/Log';
 import { InsightsScreen } from './ui/Insights';
 import { ReportScreen } from './ui/Report';
+import { AccountCard, SignInForm } from './ui/Account';
+import { useCloud } from './cloud/useCloud';
+import { cloudConfigured } from './cloud/config';
 
 type Tab = 'scan' | 'log' | 'insights' | 'report' | 'profile';
 const TABS: { k: Tab; label: string; icon: string }[] = [
@@ -19,6 +22,7 @@ const TABS: { k: Tab; label: string; icon: string }[] = [
 
 export default function App() {
   const st = useStore();
+  const cloud = useCloud(st.snapshot, st.applySnapshot);
   const [tab, setTab] = useState<Tab>('scan');
   const [scanMode, setScanMode] = useState<ScanMode>('barcode');
   const [view, setView] = useState<FoodItem | null>(null);
@@ -46,6 +50,7 @@ export default function App() {
     return (
       <div className="app">
         <Onboarding key={first ? 'first' : 'add'} first={first} initial={DEFAULT_PROFILE}
+          signIn={first && cloudConfigured() ? (cloud.email ? <p className="fine" role="status">Signed in as {cloud.email}. {cloud.state === 'error' ? cloud.error : 'Bringing your data over…'}</p> : <SignInForm />) : undefined}
           onCancel={first ? undefined : () => setAdding(false)}
           onDone={(name, p) => {
             st.addPerson(name, p);
@@ -93,9 +98,10 @@ export default function App() {
     body = <ReportScreen name={displayName} p={p} log={st.log} scans={st.scans} to={weekEnd} today={today} setTo={setWeekEnd} />;
   } else {
     body = <ProfileScreen person={person} set={st.setProfile} others={st.people.length - 1}
+      account={<AccountCard cloud={cloud} />} signedIn={!!cloud.email}
       onRename={name => st.renamePerson(person.id, name)}
       onDelete={() => { st.deletePerson(person.id); setTab('scan'); setToast(`Deleted ${displayName}’s data.`); }}
-      onReset={() => { st.resetAll(); setTab('scan'); }} />;
+      onReset={async () => { if (cloud.email) await cloud.signOut().catch(() => {}); st.resetAll(); setTab('scan'); }} />;
   }
 
   return (

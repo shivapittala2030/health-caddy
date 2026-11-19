@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { DietKey, GoalKey, Person, Profile, ToleranceKey } from '../engine/types';
 import { ALLERGENS, AVOIDABLES, DIETS, GOALS, SENSITIVITIES, TOLERANCES } from '../engine/rules';
 
@@ -140,9 +140,10 @@ const STEPS = [
   { title: 'Goals and additives', sub: 'These shape your daily insights. All optional.', C: GoalsSection },
 ];
 
-export function Onboarding({ initial, first, onDone, onCancel }: {
-  initial: Profile; first: boolean; onDone: (name: string, p: Profile) => void; onCancel?: () => void;
+export function Onboarding({ initial, first, onDone, onCancel, signIn }: {
+  initial: Profile; first: boolean; onDone: (name: string, p: Profile) => void; onCancel?: () => void; signIn?: ReactNode;
 }) {
+  const [showSignIn, setShowSignIn] = useState(false);
   const [p, setP] = useState(initial);
   const [name, setName] = useState('');
   const [i, setI] = useState(-1); // -1 is the name step
@@ -160,9 +161,14 @@ export function Onboarding({ initial, first, onDone, onCancel }: {
       </div>
       <div className="body">
         {S ? <S.C p={p} set={setP} /> : (
-          <label className="field">{first ? 'What should we call you?' : 'Name'}
-            <input autoFocus value={name} maxLength={40} onChange={e => setName(e.target.value)} placeholder={first ? 'e.g. Siva' : 'e.g. Mom'} />
-          </label>
+          <>
+            <label className="field">{first ? 'What should we call you?' : 'Name'}
+              <input autoFocus value={name} maxLength={40} onChange={e => setName(e.target.value)} placeholder={first ? 'e.g. Siva' : 'e.g. Mom'} />
+            </label>
+            {first && signIn && (showSignIn
+              ? <section className="card stack"><h2 className="sec-title">Sign in to your account</h2><p className="fine">Your profiles and food logs come back once you’re signed in.</p>{signIn}</section>
+              : <button className="linkbtn" onClick={() => setShowSignIn(true)}>Already use Health Caddy on another phone? Sign in</button>)}
+          </>
         )}
       </div>
       <div className="foot">
@@ -207,8 +213,9 @@ export function PeopleSheet({ people, activeId, onSwitch, onAdd, onClose }: {
 
 export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
 
-export function ProfileScreen({ person, set, onRename, onDelete, onReset, others }: {
+export function ProfileScreen({ person, set, onRename, onDelete, onReset, others, account, signedIn }: {
   person: Person; set: Set; onRename: (name: string) => void; onDelete: () => void; onReset: () => void; others: number;
+  account?: ReactNode; signedIn?: boolean;
 }) {
   const p = person.profile;
   const [confirm, setConfirm] = useState<'' | 'person' | 'all'>('');
@@ -220,13 +227,16 @@ export function ProfileScreen({ person, set, onRename, onDelete, onReset, others
       <AvoidSection p={p} set={set} />
       <AllergySection p={p} set={set} />
       <GoalsSection p={p} set={set} />
+      {account}
       <section className="card stack">
         <h2 className="sec-title">Your data</h2>
-        <p className="fine">Profiles, food logs and reports are saved only in this browser on this phone. Nothing is sent to us. Product lookups go to Open Food Facts with only the barcode or search words.</p>
+        <p className="fine">{signedIn
+          ? 'Profiles, food logs and reports are saved on this phone and in your private account. Only you can see your account’s data.'
+          : 'Profiles, food logs and reports are saved only in this browser on this phone. Nothing is sent to us.'} Product lookups go to Open Food Facts with only the barcode or search words.</p>
         {confirm === 'person' ? (
           <div className="row"><span className="grow fine">Delete {person.name}’s profile, food log and report?</span><button className="btn small danger" onClick={() => { setConfirm(''); onDelete(); }}>Delete</button><button className="btn small ghost" onClick={() => setConfirm('')}>Cancel</button></div>
         ) : confirm === 'all' ? (
-          <div className="row"><span className="grow fine">Delete everyone’s profiles and logs on this phone?</span><button className="btn small danger" onClick={onReset}>Delete all</button><button className="btn small ghost" onClick={() => setConfirm('')}>Cancel</button></div>
+          <div className="row"><span className="grow fine">Delete everyone’s profiles and logs on this phone?{signedIn ? ' You’ll be signed out; your cloud copy stays.' : ''}</span><button className="btn small danger" onClick={onReset}>Delete all</button><button className="btn small ghost" onClick={() => setConfirm('')}>Cancel</button></div>
         ) : (
           <div className="row">
             <button className="btn ghost small" onClick={() => setConfirm('person')}>Delete {person.name}</button>

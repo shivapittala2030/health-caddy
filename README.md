@@ -46,3 +46,11 @@ The camera only works on `https://` pages (or `localhost`). Pushing to `main` on
 - `public/` app icons, web manifest and offline service worker
 
 Health Caddy gives general guidance, not medical advice.
+
+## Optional sign-in and cloud sync
+
+People can sign in with just their email (a sign-in link or 6-digit code, no password). Signing in is the opt-in: until someone signs in, nothing leaves the phone. Once signed in, all profiles, food logs, usual meals and scan history on that phone are merged with the account's copy and kept in step on every phone where they sign in (`src/cloud/`).
+
+- Backend: Supabase (Auth + one Postgres table). Setup script: `supabase/schema.sql`. Row Level Security means each account can only read and write its own row.
+- `src/cloud/config.ts` holds the project URL and the **publishable** key, which is safe to ship in the app. Never put a secret or service_role key in this repository.
+- Merging (`src/cloud/merge.ts`) joins data by id, keeps deletions, and takes the newest edit of a profile, so two phones never lose each other's entries.

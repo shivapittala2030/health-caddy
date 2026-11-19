@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { DietKey, GoalKey, Profile, ToleranceKey } from '../engine/types';
+import type { DietKey, GoalKey, Person, Profile, ToleranceKey } from '../engine/types';
 import { ALLERGENS, AVOIDABLES, DIETS, GOALS, SENSITIVITIES, TOLERANCES } from '../engine/rules';
 
 type Set = (p: Profile) => void;
@@ -140,44 +140,99 @@ const STEPS = [
   { title: 'Goals and additives', sub: 'These shape your daily insights. All optional.', C: GoalsSection },
 ];
 
-export function Onboarding({ initial, onDone }: { initial: Profile; onDone: (p: Profile) => void }) {
+export function Onboarding({ initial, first, onDone, onCancel }: {
+  initial: Profile; first: boolean; onDone: (name: string, p: Profile) => void; onCancel?: () => void;
+}) {
   const [p, setP] = useState(initial);
-  const [i, setI] = useState(0);
-  const S = STEPS[i];
+  const [name, setName] = useState('');
+  const [i, setI] = useState(-1); // -1 is the name step
+  const total = STEPS.length + 1;
+  const S = i >= 0 ? STEPS[i] : null;
   return (
-    <div className="onb" role="dialog" aria-modal="true" aria-label="Set up your profile">
+    <div className="onb" role="dialog" aria-modal="true" aria-label="Set up a profile">
       <div className="top">
-        <div className="bar" aria-hidden="true"><i style={{ width: `${((i + 1) / STEPS.length) * 100}%` }} /></div>
-        <p className="sub">Step {i + 1} of {STEPS.length}</p>
-        <h1 className="h">{S.title}</h1>
-        <p className="sub">{S.sub}</p>
+        <div className="bar" aria-hidden="true"><i style={{ width: `${((i + 2) / total) * 100}%` }} /></div>
+        <p className="sub">Step {i + 2} of {total}</p>
+        <h1 className="h">{S ? S.title : first ? 'Welcome to Health Caddy' : 'Add a person'}</h1>
+        <p className="sub">{S ? S.sub : first
+          ? 'Each person gets their own diet, allergies, food log and weekly report. You can add family members later.'
+          : 'They get their own diet, allergies, food log and weekly report on this phone.'}</p>
       </div>
-      <div className="body"><S.C p={p} set={setP} /></div>
+      <div className="body">
+        {S ? <S.C p={p} set={setP} /> : (
+          <label className="field">{first ? 'What should we call you?' : 'Name'}
+            <input autoFocus value={name} maxLength={40} onChange={e => setName(e.target.value)} placeholder={first ? 'e.g. Siva' : 'e.g. Mom'} />
+          </label>
+        )}
+      </div>
       <div className="foot">
-        {i > 0 && <button className="btn ghost" onClick={() => setI(i - 1)}>Back</button>}
+        {i >= 0 ? <button className="btn ghost" onClick={() => setI(i - 1)}>Back</button>
+          : onCancel && <button className="btn ghost" onClick={onCancel}>Cancel</button>}
         {i < STEPS.length - 1
-          ? <button className="btn" onClick={() => setI(i + 1)}>Next</button>
-          : <button className="btn" onClick={() => onDone(p)}>Start scanning</button>}
+          ? <button className="btn" disabled={i === -1 && !name.trim()} onClick={() => setI(i + 1)}>Next</button>
+          : <button className="btn" onClick={() => onDone(name, p)}>Start scanning</button>}
       </div>
     </div>
   );
 }
 
-export function ProfileScreen({ p, set, onReset }: { p: Profile; set: Set; onReset: () => void }) {
-  const [confirm, setConfirm] = useState(false);
+/** Bottom sheet listing everyone on this phone. */
+export function PeopleSheet({ people, activeId, onSwitch, onAdd, onClose }: {
+  people: Person[]; activeId: string; onSwitch: (id: string) => void; onAdd: () => void; onClose: () => void;
+}) {
   return (
     <>
-      <div><h1 className="h">Your profile</h1><p className="sub">Every verdict is worked out from these settings. Changes apply right away.</p></div>
+      <div className="scrim" onClick={onClose} />
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Who is using Health Caddy">
+        <div className="grab" />
+        <h2 className="h">Who’s using Health Caddy?</h2>
+        <div className="results">
+          {people.map(x => (
+            <button key={x.id} className="res" aria-current={x.id === activeId ? 'true' : undefined} onClick={() => onSwitch(x.id)}>
+              <span className="row" style={{ flexWrap: 'nowrap' }}>
+                <span className="avatar" aria-hidden="true">{initials(x.name)}</span>
+                <span><b>{x.name}</b><small>{profileSummary(x.profile)}</small></span>
+              </span>
+              {x.id === activeId && <span className="pill v-good">Active</span>}
+            </button>
+          ))}
+        </div>
+        <button className="btn ghost" onClick={onAdd}>+ Add a person</button>
+        <p className="fine">Each person’s profile, food log and report are kept separately on this phone.</p>
+        <button className="btn ghost" onClick={onClose}>Close</button>
+      </div>
+    </>
+  );
+}
+
+export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
+
+export function ProfileScreen({ person, set, onRename, onDelete, onReset, others }: {
+  person: Person; set: Set; onRename: (name: string) => void; onDelete: () => void; onReset: () => void; others: number;
+}) {
+  const p = person.profile;
+  const [confirm, setConfirm] = useState<'' | 'person' | 'all'>('');
+  return (
+    <>
+      <div><h1 className="h">{person.name}’s profile</h1><p className="sub">Every verdict is worked out from these settings. Changes apply right away.</p></div>
+      <label className="field">Name<input value={person.name} maxLength={40} onChange={e => onRename(e.target.value)} /></label>
       <DietSection p={p} set={set} />
       <AvoidSection p={p} set={set} />
       <AllergySection p={p} set={set} />
       <GoalsSection p={p} set={set} />
       <section className="card stack">
         <h2 className="sec-title">Your data</h2>
-        <p className="fine">Your profile and food log are saved only in this browser on this device. Nothing is sent to us. Product lookups go to Open Food Facts with only the barcode or search words.</p>
-        {confirm
-          ? <div className="row"><span className="grow fine">Delete your profile and the whole food log?</span><button className="btn small danger" onClick={onReset}>Delete</button><button className="btn small ghost" onClick={() => setConfirm(false)}>Cancel</button></div>
-          : <button className="btn ghost small" onClick={() => setConfirm(true)}>Delete my data</button>}
+        <p className="fine">Profiles, food logs and reports are saved only in this browser on this phone. Nothing is sent to us. Product lookups go to Open Food Facts with only the barcode or search words.</p>
+        {confirm === 'person' ? (
+          <div className="row"><span className="grow fine">Delete {person.name}’s profile, food log and report?</span><button className="btn small danger" onClick={() => { setConfirm(''); onDelete(); }}>Delete</button><button className="btn small ghost" onClick={() => setConfirm('')}>Cancel</button></div>
+        ) : confirm === 'all' ? (
+          <div className="row"><span className="grow fine">Delete everyone’s profiles and logs on this phone?</span><button className="btn small danger" onClick={onReset}>Delete all</button><button className="btn small ghost" onClick={() => setConfirm('')}>Cancel</button></div>
+        ) : (
+          <div className="row">
+            <button className="btn ghost small" onClick={() => setConfirm('person')}>Delete {person.name}</button>
+            {others > 0 && <button className="btn ghost small" onClick={() => setConfirm('all')}>Delete everyone’s data</button>}
+          </div>
+        )}
       </section>
       <section className="card stack">
         <h2 className="sec-title">About</h2>

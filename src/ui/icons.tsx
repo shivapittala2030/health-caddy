@@ -6,6 +6,7 @@ export const ICONS: Record<string, ReactElement> = {
   log: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 9h6M9 13h6M9 17h3" /></svg>,
   effects: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><path d="M3 12h4l3-7 4 14 3-7h4" /></svg>,
   profile: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c1-4 4-6 8-6s7 2 8 6" /></svg>,
+  report: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>,
   search: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><circle cx="11" cy="11" r="6" /><path d="M20 20l-4-4" /></svg>,
   camera: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>,
   usual: <svg viewBox="0 0 24 24" {...S} strokeWidth="2"><path d="M4 12a8 8 0 1 0 3-6.2" /><path d="M4 4v4h4" /><path d="M12 8v4l3 2" /></svg>,

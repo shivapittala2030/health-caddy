@@ -75,6 +75,7 @@ export interface Evaluation {
 
 export interface LogEntry {
   id: string;
+  personId?: string; // missing only on entries saved before profiles existed
   date: string; // YYYY-MM-DD, local
   time: number; // minutes after midnight
   servings: number;
@@ -83,6 +84,28 @@ export interface LogEntry {
 
 export interface UsualMeal {
   id: string;
+  personId?: string;
   name: string;
   items: FoodItem[];
+}
+
+/** One person using the app on this device, with their own settings. */
+export interface Person {
+  id: string;
+  name: string;
+  profile: Profile;
+  createdAt: number;
+}
+
+/** A record that a person checked a food, kept for their usage report. */
+export interface ScanEvent {
+  id: string;
+  personId: string;
+  at: number; // ms since epoch
+  date: string; // YYYY-MM-DD, local
+  itemId: string;
+  name: string;
+  brand?: string;
+  source: ItemSource;
+  verdict: Verdict;
 }

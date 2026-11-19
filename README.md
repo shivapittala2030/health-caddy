@@ -16,6 +16,8 @@ This is release 1 (features F1–F8 in the features & requirements doc). It is a
 | F6 | Verdicts Avoid, Caution, Good, Unknown, each with reasons | `src/engine/evaluate.ts` |
 | F7 | Food log by search, barcode, photo or usual meal | Log tab; your log stays on your device |
 | F8 | Predicted effects for the next 24–48 hours | Insights tab; transparent rules in `src/engine/predict.ts` |
+| F16 | Several people on one phone | Tap the name at the top to switch or add a person; each has their own profile, log and report |
+| — | Weekly report | Report tab: scans, verdict counts, most flagged ingredients, sugar, sodium, fiber and calorie trends (`src/engine/report.ts`) |
 
 Key rules it follows: verdicts come only from your own profile (R1), every verdict shows its reasons (R2), missing or unreadable ingredients show **Unknown, never Good** (R3), hidden animal sources are flagged (R4), and your profile and food log never leave the device (R16).
 

@@ -52,13 +52,20 @@ export async function deleteCloudData(userId: string) {
   if (error) throw error;
 }
 
-/** Plain-language versions of the errors people are likely to hit. */
+/** Plain-language versions of the errors people are likely to hit, with the original reason kept for support. */
 export function friendlyError(e: unknown): string {
   const m = String((e as { message?: string })?.message || e || '');
-  if (/rate limit|too many|429/i.test(m)) return 'Too many sign-in emails were sent. Please wait a few minutes and try again.';
-  if (/expired|invalid.*(otp|token)|token.*(invalid|expired)/i.test(m)) return 'That code didn’t work or has expired. Ask for a new email and try again.';
-  if (/not authorized|not allowed|email address.*not/i.test(m)) return 'This email can’t receive sign-in emails yet. The app owner needs to finish the email setup.';
-  if (/relation .*user_data.* does not exist|user_data/i.test(m)) return 'Cloud storage isn’t set up yet. The app owner needs to run the setup script.';
-  if (/fetch|network|load failed/i.test(m)) return 'Can’t reach the cloud. Check your internet connection and try again.';
-  return 'Something went wrong with sign-in. Please try again.';
+  const code = String((e as { code?: string })?.code || '');
+  const status = (e as { status?: number })?.status;
+  let say = 'Something went wrong with sign-in. Please try again.';
+  const wait = m.match(/after (\d+) seconds?/i);
+  if (wait) say = `Please wait ${wait[1]} seconds before asking for another email.`;
+  else if (/rate.?limit|too many|429/i.test(m + code) || status === 429) say = 'Too many sign-in emails were sent. Please wait a few minutes and try again.';
+  else if (/error sending|smtp|confirmation email|magic link email/i.test(m)) say = 'The sign-in email could not be sent. The app owner should check the email (SMTP) settings in Supabase.';
+  else if (/expired|invalid.*(otp|token)|token.*(invalid|expired)|otp_expired/i.test(m + code)) say = 'That code didn’t work or has expired. Ask for a new email and try again.';
+  else if (/signups? not allowed|not authorized|not allowed/i.test(m)) say = 'This email isn’t allowed to sign in yet.';
+  else if (/invalid.*email|email.*invalid|validation/i.test(m + code)) say = 'That email address doesn’t look right. Please check it.';
+  else if (/permission denied|user_data|42501|42P01/i.test(m + code)) say = 'Cloud storage isn’t set up correctly yet. The app owner needs to check the Supabase setup.';
+  else if (/failed to fetch|network|load failed/i.test(m)) say = 'Can’t reach the cloud. Check your internet connection and try again.';
+  return m ? `${say} (Details: ${m.slice(0, 160)})` : say;
 }

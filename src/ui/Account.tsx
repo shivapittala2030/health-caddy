@@ -37,9 +37,9 @@ export function SignInForm({ onDone }: { onDone?: () => void }) {
   );
   return (
     <div className="stack">
-      <p className="fine">We sent an email to <b>{email}</b>. Tap the link in it on this phone. If the email shows a 6-digit code instead, type it here.</p>
+      <p className="fine">We sent an email to <b>{email}</b>. Tap the link in it on this phone. Or type the code from the email here.</p>
       <form className="row" onSubmit={e => { e.preventDefault(); verify(); }}>
-        <input className="inp grow" inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} placeholder="6-digit code" aria-label="Sign-in code" />
+        <input className="inp grow" inputMode="numeric" autoComplete="one-time-code" maxLength={10} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} placeholder="Code from the email" aria-label="Sign-in code" />
         <button className="btn" type="submit" disabled={busy || code.length < 6}>Sign in</button>
       </form>
       {err && <div className="err" role="alert">{err}</div>}
